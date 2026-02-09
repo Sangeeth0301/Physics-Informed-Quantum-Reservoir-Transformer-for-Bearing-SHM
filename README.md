@@ -1,0 +1,1 @@
+# -Physics-Informed-Quantum-Reservoir-Transformer-for-Bearing-SHM
