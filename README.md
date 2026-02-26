@@ -13,17 +13,17 @@ This project aims to develop a novel unsupervised, hybrid quantum-classical fram
 
 The following modular phases are currently complete, fully verified, and hardened for publication reproducibility:
 
-### Phase 1: Data Preparation & Signal Conditioning (✅ Completed)
+### Phase 1: Data Preparation & Signal Conditioning 
 - Robust loading of bearing acceleration data (currently via CWRU `.mat` or `v7.3` hdf5 formats).
 - Implementation of safe, research-grade signal conditioning (Butterworth bandpass, Hilbert Transform envelopes, empirical mean centering/scaling).
 - Extracting sliding overlapping tensors (2048 samples, 512 stride).
 
-### Phase 2: Classical Multi-Resolution Dynamics Analysis (✅ Completed)
+### Phase 2: Classical Multi-Resolution Dynamics Analysis 
 - Extraction of high-dimensional Hankel matrices via strict delay embedding.
 - Deployment of multi-level standard/mrDMD factorization models.
 - Statistical Koopman feature extraction including spectral radius mapping, instability node counts, and characteristic mean frequency tracing.
 
-### Phase 3: Projected Quantum Kernel Reservoir (PQKR) (✅ Completed)
+### Phase 3: Projected Quantum Kernel Reservoir (PQKR) 
 - Leakage-safe Z-score normalization scaling and dimensional variance compression (via PCA) bottlenecked to scalable qubits architectures.
 - Exact algorithmic mapping mapping a generic continuous feature space directly into a deterministic PennyLane parametrised rotation matrix (`AngleEmbedding`).
 - Robust untrainable continuous quantum feature mapping evaluated over multi-seeded variance benchmarks against Gaussian RBF baselines via Frobenius divergence and theoretical maximum mean discrepancy (MMD).
