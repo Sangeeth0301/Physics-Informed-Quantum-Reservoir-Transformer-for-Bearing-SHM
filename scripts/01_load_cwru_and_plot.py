@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 
 # === CONFIG ===
-data_dir = r"C:\Users\sange\OneDrive\Desktop\Physics-Informed-Quantum-Reservoir-Transformer\data\raw\CWRU"
+data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'raw', 'CWRU'))
 
 healthy_file = "97.mat"   # Healthy baseline (0 HP)
 fault_file   = "107.mat"  # 7 mil outer race fault
@@ -133,7 +133,7 @@ plt.tight_layout()
 plt.show()
 
 # Save processed data (fast loading later)
-processed_dir = r"C:\Users\sange\OneDrive\Desktop\Physics-Informed-Quantum-Reservoir-Transformer\data\processed"
+processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed'))
 os.makedirs(processed_dir, exist_ok=True)
 
 np.save(os.path.join(processed_dir, "healthy_windows.npy"), healthy_segments)
@@ -177,7 +177,7 @@ plt.tight_layout()
 plt.show()
 
 # Save processed windows as .npy (fast loading later)
-processed_dir = r"C:\Users\sange\OneDrive\Desktop\Physics-Informed-Quantum-Reservoir-Transformer\data\processed"
+processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed'))
 os.makedirs(processed_dir, exist_ok=True)
 
 np.save(os.path.join(processed_dir, "healthy_windows.npy"), healthy_windows)
@@ -202,7 +202,7 @@ print(f"Healthy windows: {healthy_windows.shape}")
 print(f"Fault windows:   {fault_windows.shape}")
 
 # Save as .npy (fast loading later)
-processed_dir = r"C:\Users\sange\OneDrive\Desktop\Physics-Informed-Quantum-Reservoir-Transformer\data\processed"
+processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed'))
 os.makedirs(processed_dir, exist_ok=True)
 
 np.save(os.path.join(processed_dir, "healthy_windows.npy"), healthy_windows)

@@ -40,11 +40,11 @@ pip install -r requirements.txt
 You can replicate our results by executing the Phase sequence:
 ```powershell
 # Phase 1
-python data/notebooks/01_load_cwru_and_plot.py
+python scripts/01_load_cwru_and_plot.py
 
 # Phase 2
-python data/notebooks/02_mrdmd_analysis.py
+python scripts/02_mrdmd_analysis.py
 
 # Phase 3
-python data/notebooks/03_pqkr_analysis.py
+python scripts/03_pqkr_analysis.py
 ```

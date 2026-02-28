@@ -4,9 +4,10 @@ import sys
 import os
 
 # Ensure root is in path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import rbf_kernel
@@ -14,10 +15,10 @@ from sklearn.preprocessing import StandardScaler
 
 from src.quantum.pqkr import PQKR
 from src.quantum.metrics import frobenius_divergence, compute_mmd, kernel_eigenvalue_spectrum
-from data.notebooks.signal_processing import preprocess_bearing_signal
+from src.data_prep.signal_processing import preprocess_bearing_signal
 from pydmd import MrDMD, DMD
 
-results_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'results', 'plots'))
+results_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'results', 'plots'))
 os.makedirs(results_dir, exist_ok=True)
 
 # 1. mrDMD Feature Vector Construction
@@ -87,7 +88,7 @@ if __name__ == "__main__":
     print("==================================\n")
 
     # Load previously locked preprocessed windows
-    processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'processed'))
+    processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed'))
     healthy_windows = np.load(os.path.join(processed_dir, "healthy_windows.npy"))
     fault_windows   = np.load(os.path.join(processed_dir, "fault_windows.npy"))
 
@@ -266,5 +267,57 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.savefig(os.path.join(results_dir, "mmd_divergence_comparison.png"), dpi=300)
     plt.close()
+
+    print("\n=============================================")
+    print("IEEE FORMATTED TABULAR RESULTS GENERATED")
+    print("=============================================\n")
+    
+    tables_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'results', 'tables'))
+    os.makedirs(tables_dir, exist_ok=True)
+
+    # 1. Main Divergence Table
+    summary_df = pd.DataFrame({
+        "Method": ["Classical RBF Kernel", "Projected Quantum Kernel (PQKR)"],
+        "Mean Frobenius Divergence": [
+            f"{np.mean(classical_frob_list):.4f} ± {np.std(classical_frob_list):.4f}",
+            f"{np.mean(quantum_frob_list):.4f} ± {np.std(quantum_frob_list):.4f}"
+        ],
+        "Maximum Mean Discrepancy (MMD)": [
+            f"{np.mean(classical_mmd_list):.4f} ± {np.std(classical_mmd_list):.4f}",
+            f"{np.mean(quantum_mmd_list):.4f} ± {np.std(quantum_mmd_list):.4f}"
+        ]
+    })
+    
+    # 2. Ablation Table
+    ablation_df = pd.DataFrame({
+        "Qubits (PCA Components)": ablation_qubits,
+        "Measured Quantum MMD": [f"{mmd:.4f}" for mmd in ablation_mmd]
+    })
+    
+    # Print formatted markdown to console
+    print(summary_df.to_markdown(index=False))
+    print("\n")
+    print(ablation_df.to_markdown(index=False))
+    
+    # Export for Q1 Publication
+    summary_df.to_csv(os.path.join(tables_dir, "divergence_metrics.csv"), index=False)
+    ablation_df.to_csv(os.path.join(tables_dir, "qubit_ablation.csv"), index=False)
+    
+    # Generate explicit IEEE-style LaTeX code using Styler formatting to prevent future deprecation warnings
+    with open(os.path.join(tables_dir, "divergence_metrics.tex"), "w") as f:
+        f.write(summary_df.style.to_latex(
+            caption="Comparative Divergence Metrics over 10 seeded iterations",
+            label="tab:divergence_metrics",
+            hrules=True
+        ))
+        
+    with open(os.path.join(tables_dir, "qubit_ablation.tex"), "w") as f:
+        f.write(ablation_df.style.to_latex(
+            caption="Quantum Kernel Separation scalability across Qubit Dimensionality",
+            label="tab:qubit_ablation",
+            hrules=True
+        ))
+        
+    print("\n[+] Tables exported to results/tables/ in CSV and LaTeX format for direct manuscript inclusion.")
 
     print("\nPQKR PHASE COMPLETE — READY FOR REVIEW")

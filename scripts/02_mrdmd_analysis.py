@@ -1,6 +1,10 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from scipy.signal import hilbert
-from signal_processing import preprocess_bearing_signal
-from signal_processing import envelope_signal
+from src.data_prep.signal_processing import preprocess_bearing_signal
+from src.data_prep.signal_processing import envelope_signal
 def envelope_signal(x):
     analytic = hilbert(x)
     return np.abs(analytic)# ============================================================
@@ -19,8 +23,8 @@ print(">>> MRDMD PIPELINE STARTING <<<")
 # CONFIG
 # ============================================================
 
-processed_dir = r"C:\Users\sange\OneDrive\Desktop\Physics-Informed-Quantum-Reservoir-Transformer\data\processed"
-results_dir   = r"C:\Users\sange\OneDrive\Desktop\Physics-Informed-Quantum-Reservoir-Transformer\results\plots"
+processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed'))
+results_dir   = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'results', 'plots'))
 
 os.makedirs(results_dir, exist_ok=True)
 
@@ -35,7 +39,7 @@ print("Healthy windows shape:", healthy_windows.shape)
 print("Fault windows shape:", fault_windows.shape)
 
 # DEBUG: visualize envelope effect
-from signal_processing import envelope_signal
+from src.data_prep.signal_processing import envelope_signal
 
 test_raw = fault_windows[0]
 test_env = envelope_signal(test_raw)
