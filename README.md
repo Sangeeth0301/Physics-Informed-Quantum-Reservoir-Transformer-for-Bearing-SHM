@@ -1,56 +1,63 @@
-# Physics-Informed Quantum Reservoir Transformer for Bearing SHM
+# Quantum-Enhanced Koopman Operator Learning for Incipient Bearing Instability Early Warning
 
-**Status**: Research & Development  
+**Status**: Research & Development (Phase 1-3 Completed)  
 **Goal**: Ultra-early bearing fault detection for predictive maintenance
 
-This project aims to develop a novel unsupervised, hybrid quantum-classical framework specifically targeting the ultra-early detection of incipient bearing instability in rotating machinery. By diagnosing the birth of dynamical instability rather than waiting for traditional post-fault spectral frequencies (BPFO, BPFI, BSF), this research targets Industry 4.0 predictive maintenance via:
-1. Multi-resolution Dynamic Mode Decomposition (mrDMD)
-2. Koopman Operator Spectral Analysis
-3. Projected Quantum Kernel Reservoir (PQKR) Feature Lifting
-4. Physics-Guided Latent Output consistency
+## 📖 Project Overview
+We are building an **advanced hybrid quantum-classical system** that can detect **very early (incipient) faults** in rolling element bearings of rotating machines (motors, turbines, pumps) **much earlier** than traditional methods.
 
-## Implementation Progress
+- **Input**: Vibration signals from accelerometers.
+- **Core Innovation**: Detecting the **birth of dynamical instability** — subtle changes in the underlying dynamics (mode splitting, spectral radius drift) while the signal appears almost healthy, rather than waiting for obvious fault frequencies (BPFO, BPFI) to manifest.
+- **Approach**: Train only on healthy data (unsupervised). We fuse physical rules of bearing motion, multi-scale dynamics analysis, and high-dimensional quantum embeddings to make microscopic instability signals stand out.
+- **Output**: A continuous "Instability Score" (SI) that provides an early warning prior to spectral fault visibility.
 
-The following modular phases are currently complete, fully verified, and hardened for publication reproducibility:
+## 🧠 The Core Problem
+Traditional methods (FFT, classical ML, Deep Learning) fail at early detection because they:
+- Rely heavily on faulty training data (rare in real, dynamic industrial settings).
+- Look for frequency peaks *after* the fault has already physically grown.
+- Ignore the nonlinear physical dynamics of the bearing (Hertzian contact, impulsive forcing).
+- Lack sensitivity to the subtle dynamical instabilities that precede physical fracture.
 
-### Phase 1: Data Preparation & Signal Conditioning 
-- Robust loading of bearing acceleration data (currently via CWRU `.mat` or `v7.3` hdf5 formats).
-- Implementation of safe, research-grade signal conditioning (Butterworth bandpass, Hilbert Transform envelopes, empirical mean centering/scaling).
-- Extracting sliding overlapping tensors (2048 samples, 512 stride).
+**Our Solution:** Detect the loss of dynamical stability using only healthy data baselines, physical constraints, and exponential quantum sensitivity.
 
-### Phase 2: Classical Multi-Resolution Dynamics Analysis 
-- Extraction of high-dimensional Hankel matrices via strict delay embedding.
-- Deployment of multi-level standard/mrDMD factorization models.
-- Statistical Koopman feature extraction including spectral radius mapping, instability node counts, and characteristic mean frequency tracing.
+## 🚀 Architecture Pipeline
+1. **Signal Conditioning**: Process raw vibration inputs (Envelope, Normalized Windows).
+2. **Multi-Resolution DMD (mrDMD)**: Extract multi-scale modes and decay rates.
+3. **Koopman Operator Estimation**: Map spectral drift and stability eigenvalues.
+4. **Projected Quantum Kernel Reservoir (PQKR)**: Entangle features into a Quantum Hilbert Space to exponentiate sensitivity.
+5. **Dynamical Consistency Network (DCN)** *(Upcoming)*: 1D-CNN Autoencoder learning healthy reconstruction.
+6. **Physics-Guided Latent Evolution** *(Upcoming)*: Neural ODE enforcing nonlinear Jeffcott/Hertzian models.
+7. **Change-Point Detection (SI Score)** *(Upcoming)*: Fusion of Recon Error + Koopman Drift + Physics Residual + Quantum Divergence.
 
-### Phase 3: Projected Quantum Kernel Reservoir (PQKR) 
-- Leakage-safe Z-score normalization scaling and dimensional variance compression (via PCA) bottlenecked to scalable qubits architectures.
-- Exact algorithmic mapping mapping a generic continuous feature space directly into a deterministic PennyLane parametrised rotation matrix (`AngleEmbedding`).
-- Robust untrainable continuous quantum feature mapping evaluated over multi-seeded variance benchmarks against Gaussian RBF baselines via Frobenius divergence and theoretical maximum mean discrepancy (MMD).
-- Comprehensive qubit ablation reporting (evaluating scaling power up to 6 qubits).
+## 📈 Current Progress
+**Phases 1-3 are complete, fully verified, and statistically hardened for Q1 publication:**
+- ✅ Environment setup & Dataset loading (CWRU benchmark).
+- ✅ Preprocessing (Bandpass, Hilbert Envelope, Extracting 2048-sample overlapped tensors).
+- ✅ mrDMD extraction & Koopman Operator feature tracking.
+- ✅ PQKR quantum embedding & Classical RBF baseline comparison.
+- ✅ Extensive Statistical Hardening: Multi-seed sensitivity, UMAP density tracking, Gaussian noise robustness, Cohen's *d* Effect Size separation bounds, and Kolmogorov-Smirnov Spectral log-decay tests.
 
-## Setup (Windows)
+## 💻 Setup & Installation
 ```powershell
+# Create and activate environment
 python -m venv .venv
 .venv\Scripts\activate
+
+# Install requirements
 pip install -r requirements.txt
 ```
 
-## Running the Verification Scripts
-You can replicate our results by executing the Phase sequence:
+## 🔄 Reproduction
+Execute the following scripts sequentially to reproduce Phase 1-3 academic baselines and optimal Q1 results:
 ```powershell
-# Phase 1
 python scripts/01_load_cwru_and_plot.py
-
-# Phase 2
 python scripts/02_mrdmd_analysis.py
-
-# Phase 3
-python scripts/03_pqkr_analysis.py
-
-# Publish Graphics (Q1 Visualizations)
-python scripts/04_q1_publication_graphics.py
-
-# Publish Statistical Hardened Results (Multi-Seed & Annotations)
-python scripts/05_q1_statistical_hardening.py
+python scripts/07_phase3_hardening.py
+python scripts/08_phase3_final_robustness.py
+python scripts/06_export_optimal_results.py
 ```
+> Note: Publication-ready figures and statistical CSVs will output to `results/optimal_q1_gallery/` and `results/tables/`.
+
+## ⏭️ Next Steps
+- **Phase 4**: Integrating the Dynamical Consistency Network (DCN) and Physics-Guided Latent ODE (on current CWRU benchmarks).
+- **Phase 5**: Validating the architecture sequentially upon NASA IMS (Run-to-failure) and XJTU-SY datasets.
