@@ -50,4 +50,7 @@ python scripts/03_pqkr_analysis.py
 
 # Publish Graphics (Q1 Visualizations)
 python scripts/04_q1_publication_graphics.py
+
+# Publish Statistical Hardened Results (Multi-Seed & Annotations)
+python scripts/05_q1_statistical_hardening.py
 ```
