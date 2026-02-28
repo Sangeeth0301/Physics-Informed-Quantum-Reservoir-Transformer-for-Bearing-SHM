@@ -96,7 +96,7 @@ X_H_norm = scaler.fit_transform(features_H)
 X_F_norm = scaler.transform(features_F)
 
 # PCA Compression
-n_qubits = 4
+n_qubits = 5
 pca = PCA(n_components=n_qubits, random_state=42)
 X_H_pca = pca.fit_transform(X_H_norm)
 X_F_pca = pca.transform(X_F_norm)
@@ -184,11 +184,14 @@ for s in seeds:
     })
     
     # Embedding metrics
+    K_comb_q = np.vstack([np.hstack([K_HH, K_HF]), np.hstack([K_HF.T, K_FF])])
+    dist_q = np.clip(1.0 - K_comb_q, 0, 1)
+    
     psi_H = np.array([pqkr.get_state(x) for x in X_H_pca])
     psi_F = np.array([pqkr.get_state(x) for x in X_F_pca])
-    psi_comb = np.vstack([np.abs(psi_H), np.abs(psi_F)])
+    psi_comb = np.vstack([np.hstack([np.real(psi_H), np.imag(psi_H)]), np.hstack([np.real(psi_F), np.imag(psi_F)])])
     
-    q_sil_list.append(silhouette_score(psi_comb, labels))
+    q_sil_list.append(silhouette_score(dist_q, labels, metric='precomputed'))
     q_db_list.append(davies_bouldin_score(psi_comb, labels))
     q_ch_list.append(calinski_harabasz_score(psi_comb, labels))
     
@@ -216,8 +219,10 @@ for s in seeds:
     c_intra_F_list.append(c_intra_F)
     c_inter_list.append(c_inter)
     c_sep_ratio_list.append(c_sep)
-    
-    c_sil_list.append(silhouette_score(X_combined_pca, labels))
+    C_comb_c = np.vstack([np.hstack([C_HH, C_HF]), np.hstack([C_HF.T, C_FF])])
+    dist_c = np.clip(1.0 - C_comb_c, 0, 1)
+
+    c_sil_list.append(silhouette_score(dist_c, labels, metric='precomputed'))
     c_db_list.append(davies_bouldin_score(X_combined_pca, labels))
     c_ch_list.append(calinski_harabasz_score(X_combined_pca, labels))
 
@@ -275,13 +280,13 @@ fig, axs = plt.subplots(1, 2, figsize=(14, 6))
 
 im1 = axs[0].imshow(K_HH0, cmap='viridis', aspect='auto')
 axs[0].set_title(f"Healthy Intra-Class\n$\\mu_{{intra}}={intra_H0:.3f}$, Sep Ratio={sep_ratio0:.2f}")
-plt.colorbar(im1, ax=axs[0], label="Fidelity $|\langle\psi_i | \psi_j\\rangle|^2$")
+plt.colorbar(im1, ax=axs[0], label=r"Fidelity $|\langle\psi_i | \psi_j\rangle|^2$")
 axs[0].set_xlabel("Window Index")
 axs[0].set_ylabel("Window Index")
 
 im2 = axs[1].imshow(K_FF0, cmap='viridis', aspect='auto')
 axs[1].set_title(f"Fault Intra-Class\n$\\mu_{{intra}}={intra_F0:.3f}$")
-plt.colorbar(im2, ax=axs[1], label="Fidelity $|\langle\psi_i | \psi_j\\rangle|^2$")
+plt.colorbar(im2, ax=axs[1], label=r"Fidelity $|\langle\psi_i | \psi_j\rangle|^2$")
 axs[1].set_xlabel("Window Index")
 axs[1].set_ylabel("Window Index")
 
@@ -296,7 +301,7 @@ im = ax.imshow(K_HF0, cmap='magma', aspect='auto')
 ax.set_title(f"Structured 2D Cross-Fidelity Manifold (Healthy vs Fault)\n$\\mu_{{inter}}={inter_HF0:.3f}$, Sep Ratio={sep_ratio0:.2f}")
 ax.set_xlabel("Fault Window Index")
 ax.set_ylabel("Healthy Window Index")
-plt.colorbar(im, ax=ax, label="Cross-Fidelity $|\langle\psi_x | \psi_y\\rangle|^2$")
+plt.colorbar(im, ax=ax, label=r"Cross-Fidelity $|\langle\psi_x | \psi_y\rangle|^2$")
 plt.tight_layout()
 plt.savefig(os.path.join(results_plots, "cross_kernel_structure.png"), dpi=300)
 plt.close()
@@ -325,7 +330,7 @@ ax1.plot(np.log10(mean_spec_F + 1e-12), label=f'Fault (Eff. Rank={rank_F})', col
 ax1.fill_between(range(len(mean_spec_F)), np.log10(mean_spec_F - std_spec_F + 1e-12), np.log10(mean_spec_F + std_spec_F + 1e-12), color='red', alpha=0.2)
 ax1.set_title(f"Quantum Kernel Log-Eigenvalue Decay\nKS-Test p={p_ks:.2e}")
 ax1.set_xlabel("Eigenvalue Index")
-ax1.set_ylabel("$\log_{10}(\lambda)$")
+ax1.set_ylabel(r"$\log_{10}(\lambda)$")
 ax1.legend()
 ax1.grid(True, alpha=0.3)
 

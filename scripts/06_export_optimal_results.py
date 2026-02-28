@@ -17,8 +17,9 @@ print("=======================================================================\n
 
 # 1. Copy Optimal Plots
 optimal_plots = [
-    "q1_2D_fidelity_heatmap_annotated.png",
-    "q1_log_eigenvalue_decay_benched.png",
+    "quantum_kernel_heatmaps_q1.png",
+    "cross_kernel_structure.png",
+    "kernel_eigenspectrum_q1.png",
     "q1_umap_quantum_projection.png",
     "phase_space_attractor_3d.png",
     "koopman_unit_circle_kde_fault.png"
@@ -77,10 +78,25 @@ if os.path.exists(os.path.join(tables_dir, "hyperparameter_ablation_grid.csv")):
     render_mpl_table(df_ablation, os.path.join(optimal_dir, "table_2_ablation_grid.png"), col_width=2.5, font_size=9)
     print("  -> Rendered Ablation Grid table")
 
-# Table 3: Divergence Metrics
+# Table 3: Divergence Metrics (Old)
 if os.path.exists(os.path.join(tables_dir, "divergence_metrics.csv")):
     df_divergence = pd.read_csv(os.path.join(tables_dir, "divergence_metrics.csv"))
     render_mpl_table(df_divergence, os.path.join(optimal_dir, "table_3_divergence_metrics.png"), col_width=4.5)
     print("  -> Rendered Divergence Metrics table")
+
+# Table 4: Phase 3 Summary Statistics
+if os.path.exists(os.path.join(tables_dir, "pqkr_summary_statistics.csv")):
+    df_summary = pd.read_csv(os.path.join(tables_dir, "pqkr_summary_statistics.csv"))
+    # Clean it up for rendering
+    df_summary = df_summary[['Metric', 'Classical_Mean', 'Classical_Std', 'Quantum_Mean', 'Quantum_Std', 'p_value_vs_classical']]
+    df_summary = df_summary.round(4)
+    render_mpl_table(df_summary, os.path.join(optimal_dir, "table_4_pqkr_summary.png"), col_width=2.5, font_size=9)
+    print("  -> Rendered PQKR Summary table")
+
+# Table 5: Quantum Advantage Table
+if os.path.exists(os.path.join(tables_dir, "quantum_advantage_table.csv")):
+    df_adv = pd.read_csv(os.path.join(tables_dir, "quantum_advantage_table.csv"))
+    render_mpl_table(df_adv, os.path.join(optimal_dir, "table_5_quantum_advantage.png"), col_width=3.5)
+    print("  -> Rendered Quantum Advantage table")
 
 print("\n🚀 OPTIMAL RESULTS VAULT CREATED SUCCESSFULLY.")

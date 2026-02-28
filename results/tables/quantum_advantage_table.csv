@@ -1,0 +1,5 @@
+Metric,Classical,Quantum,% Improvement
+Frobenius Divergence,0.8980 ± 0.0000,0.8952 ± 0.0000,+0.31%
+MMD,0.5711 ± 0.0000,0.4594 ± 0.0000,-19.56%
+Silhouette,0.1642 ± 0.0000,0.1089 ± 0.0000,-33.69%
+Separation Ratio,25.0314 ± 0.0000,3.8238 ± 0.0000,-84.72%
