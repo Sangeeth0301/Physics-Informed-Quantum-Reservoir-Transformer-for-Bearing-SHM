@@ -207,5 +207,45 @@ os.makedirs(processed_dir, exist_ok=True)
 
 np.save(os.path.join(processed_dir, "healthy_windows.npy"), healthy_windows)
 np.save(os.path.join(processed_dir, "fault_windows.npy"), fault_windows)
-
 print("Windows saved to data/processed/")
+
+# === Q1 Journal Publication Graphic: 3D Phase-Space Attractor ===
+print("\nGenerating 3D Phase-Space Attractors for Q1 visualization...")
+try:
+    from mpl_toolkits.mplot3d import Axes3D
+    results_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'results', 'plots'))
+    os.makedirs(results_dir, exist_ok=True)
+    
+    # Delay for embedding (approx. tau)
+    tau = 20
+    len_attractor = 2000
+    
+    x_h = healthy_signal[:len_attractor]
+    x_h_delay1 = healthy_signal[tau:len_attractor+tau]
+    x_h_delay2 = healthy_signal[2*tau:len_attractor+2*tau]
+    
+    x_f = fault_signal[:len_attractor]
+    x_f_delay1 = fault_signal[tau:len_attractor+tau]
+    x_f_delay2 = fault_signal[2*tau:len_attractor+2*tau]
+    
+    fig = plt.figure(figsize=(14, 6))
+    ax1 = fig.add_subplot(121, projection='3d')
+    ax1.plot(x_h, x_h_delay1, x_h_delay2, color='green', lw=0.5, alpha=0.8)
+    ax1.set_title("Healthy Phase-Space Attractor (Limit Cycle)")
+    ax1.set_xlabel('x(t)')
+    ax1.set_ylabel(f'x(t+{tau})')
+    ax1.set_zlabel(f'x(t+{2*tau})')
+    
+    ax2 = fig.add_subplot(122, projection='3d')
+    ax2.plot(x_f, x_f_delay1, x_f_delay2, color='red', lw=0.5, alpha=0.8)
+    ax2.set_title("Incipient Fault Phase-Space (Chaotic Deviations)")
+    ax2.set_xlabel('x(t)')
+    ax2.set_ylabel(f'x(t+{tau})')
+    ax2.set_zlabel(f'x(t+{2*tau})')
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(results_dir, "phase_space_attractor_3d.png"), dpi=300)
+    plt.close()
+    print("Saved 3D Attractor to results/plots/phase_space_attractor_3d.png")
+except Exception as e:
+    print(f"Failed to create 3D plot: {str(e)}")

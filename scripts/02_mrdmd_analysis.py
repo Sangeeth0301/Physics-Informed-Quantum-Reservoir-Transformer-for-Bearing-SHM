@@ -13,6 +13,7 @@ def envelope_signal(x):
 # ============================================================
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from pydmd import MrDMD, DMD
@@ -145,17 +146,48 @@ dmd_test.fit(hankel_fault)
 print("Standard DMD eigenvalues:")
 print(dmd_test.eigs)
 
-plt.figure(figsize=(6, 6))
-plt.scatter(dmd_test.eigs.real, dmd_test.eigs.imag,
-            color='purple', s=50)
-plt.title("Standard DMD Eigenvalues (Fault Window)")
-plt.xlabel("Real Part")
-plt.ylabel("Imaginary Part")
-plt.axhline(0, color='black', lw=0.5)
-plt.axvline(0, color='black', lw=0.5)
-plt.grid(True, alpha=0.3)
-plt.savefig(os.path.join(results_dir, "standard_dmd_eigs_fault.png"), dpi=300)
-plt.show()
+print("\nGenerating Q1 Koopman Eigenvalue KDE on Unit Circle...")
+from scipy.stats import gaussian_kde
+
+fig, ax = plt.subplots(figsize=(8, 8))
+# Draw unit circle
+theta = np.linspace(0, 2*np.pi, 100)
+ax.plot(np.cos(theta), np.sin(theta), color='black', lw=1.5, linestyle='--')
+
+eigs = dmd_test.eigs
+if len(eigs) > 0:
+    x = eigs.real
+    y = eigs.imag
+    
+    # Calculate KDE
+    try:
+        data = np.vstack([x, y])
+        kde = gaussian_kde(data)
+        
+        # Grid evaluating
+        xmin, xmax = -max(2, max(x)+0.5), max(2, max(x)+0.5)
+        ymin, ymax = -max(2, max(y)+0.5), max(2, max(y)+0.5)
+        xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        positions = np.vstack([xx.ravel(), yy.ravel()])
+        f = np.reshape(kde(positions).T, xx.shape)
+        
+        # Plot Density Contour
+        cset = ax.contourf(xx, yy, f, levels=15, cmap='magma', alpha=0.8)
+        fig.colorbar(cset, ax=ax, fraction=0.046, pad=0.04)
+        ax.scatter(x, y, color='white', edgecolor='black', s=20, alpha=0.9, zorder=5)
+    except:
+        ax.scatter(x, y, color='purple', s=50)
+
+ax.set_title("Standard DMD Spectral Limits: Fault Window Dynamics")
+ax.set_xlabel("Re($\lambda$)")
+ax.set_ylabel("Im($\lambda$)")
+ax.axhline(0, color='gray', lw=0.5, zorder=1)
+ax.axvline(0, color='gray', lw=0.5, zorder=1)
+ax.set_aspect('equal', 'box')
+ax.grid(True, alpha=0.2)
+plt.tight_layout()
+plt.savefig(os.path.join(results_dir, "koopman_unit_circle_kde_fault.png"), dpi=300)
+plt.close()
 
 # ============================================================
 # mrDMD ON FAULT WINDOW
@@ -285,12 +317,51 @@ def summarize(metric_list, key):
 
 print("\n=== Koopman Statistical Summary ===")
 
+h_means = {}
+h_stds = {}
+f_means = {}
+f_stds = {}
+
 for key in ["spectral_radius", "unstable_ratio", "mean_frequency"]:
+    h_m, h_s = summarize(healthy_metrics, key)
+    f_m, f_s = summarize(fault_metrics, key)
+    h_means[key], h_stds[key] = h_m, h_s
+    f_means[key], f_stds[key] = f_m, f_s
+
     h_mean, h_std = summarize(healthy_metrics, key)
     f_mean, f_std = summarize(fault_metrics, key)
 
     print(f"\nMetric: {key}")
     print(f"Healthy → mean: {h_mean:.4f}, std: {h_std:.4f}")
     print(f"Fault   → mean: {f_mean:.4f}, std: {f_std:.4f}")
+
+# === Q1 Journal Publication Graphic: Koopman Benchmarking Tables ===
+tables_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'results', 'tables'))
+os.makedirs(tables_dir, exist_ok=True)
+
+koopman_df = pd.DataFrame({
+    "Koopman Metric": ["Max Spectral Radius", "Unstable Ratio", "Mean Modal Frequency"],
+    "Healthy Baseline": [
+        f"{h_means['spectral_radius']:.4f} \pm {h_stds['spectral_radius']:.4f}",
+        f"{h_means['unstable_ratio']:.4f} \pm {h_stds['unstable_ratio']:.4f}",
+        f"{h_means['mean_frequency']:.4f} \pm {h_stds['mean_frequency']:.4f}"
+    ],
+    "Fault Dynamics (7 mil)": [
+        f"{f_means['spectral_radius']:.4f} \pm {f_stds['spectral_radius']:.4f}",
+        f"{f_means['unstable_ratio']:.4f} \pm {f_stds['unstable_ratio']:.4f}",
+        f"{f_means['mean_frequency']:.4f} \pm {f_stds['mean_frequency']:.4f}"
+    ]
+})
+
+with open(os.path.join(tables_dir, "koopman_metrics.tex"), "w") as f:
+    f.write(koopman_df.style.to_latex(
+        caption="Multi-resolution Dynamic System Indicators across 80 overlapping windows.",
+        label="tab:koopman_metrics",
+        hrules=True
+    ))
+
+koopman_df.to_csv(os.path.join(tables_dir, "koopman_metrics.csv"), index=False)
+print("\n[+] Exported Table I: Koopman Metrics to results/tables/koopman_metrics.csv & .tex")
+
 
 print("\n🚀 MRDMD RESEARCH PIPELINE FINISHED.")

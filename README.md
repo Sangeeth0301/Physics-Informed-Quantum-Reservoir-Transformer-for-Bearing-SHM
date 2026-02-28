@@ -47,4 +47,7 @@ python scripts/02_mrdmd_analysis.py
 
 # Phase 3
 python scripts/03_pqkr_analysis.py
+
+# Publish Graphics (Q1 Visualizations)
+python scripts/04_q1_publication_graphics.py
 ```
