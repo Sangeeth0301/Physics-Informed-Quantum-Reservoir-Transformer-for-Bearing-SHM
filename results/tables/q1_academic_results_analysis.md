@@ -1,4 +1,4 @@
-# PhD-Level Analysis: Physics-Informed Quantum Feature Lifting for Incipient Bearing Faults
+ Physics-Informed Quantum Feature Lifting for Incipient Bearing Faults
 
 This document synthesizes the exact mathematical phenomena visualized and tabulated in Phase 1-3. It is formatted specifically for inclusion into a Q1-Level IEEE manuscript (e.g., *IEEE Transactions on Industrial Informatics*).
 
@@ -72,3 +72,4 @@ Finally, we benched the optimal PQKR against an optimized Classical Gaussian (RB
 
 ### The Academic Conclusion
 The Classical RBF produces marginally higher absolute MMD. *However*, the PQKR forces structural orthogonal compression via quantum superposition. The lower Frobenius bounds indicate that the Quantum Reservoir generates a strictly smoother, less over-fitted manifold than the classical RBF. The quantum manifold utilizes geometric entanglement rather than just radial stretching to create its separating hyperplane, making it exponentially more robust against generalized industrial noise inputs.
+
