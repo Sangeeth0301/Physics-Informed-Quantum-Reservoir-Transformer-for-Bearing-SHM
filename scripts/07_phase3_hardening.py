@@ -141,12 +141,17 @@ c_spectra_H, c_spectra_F = [], []
 seed_metrics = []
 
 for s in seeds:
+    # --- Add Gaussian Variance ---
+    np.random.seed(s)
+    X_H_noisy = X_H_pca + np.random.normal(0, 0.02, X_H_pca.shape)
+    X_F_noisy = X_F_pca + np.random.normal(0, 0.02, X_F_pca.shape)
+    
     # --- PQKR ---
     pqkr = PQKR(n_qubits=n_qubits, n_layers=2, seed=s)
     
-    K_HH = pqkr.compute_kernel(X_H_pca, X_H_pca)
-    K_FF = pqkr.compute_kernel(X_F_pca, X_F_pca)
-    K_HF = pqkr.compute_kernel(X_H_pca, X_F_pca)
+    K_HH = pqkr.compute_kernel(X_H_noisy, X_H_noisy)
+    K_FF = pqkr.compute_kernel(X_F_noisy, X_F_noisy)
+    K_HF = pqkr.compute_kernel(X_H_noisy, X_F_noisy)
     
     # Eigenspectrum
     eigs_qH = np.real(np.linalg.eigvals(K_HH))
@@ -197,9 +202,9 @@ for s in seeds:
     
     # --- Classical RBF ---
     gamma_val = 1.0 / n_qubits
-    C_HH = rbf_kernel(X_H_pca, X_H_pca, gamma=gamma_val)
-    C_FF = rbf_kernel(X_F_pca, X_F_pca, gamma=gamma_val)
-    C_HF = rbf_kernel(X_H_pca, X_F_pca, gamma=gamma_val)
+    C_HH = rbf_kernel(X_H_noisy, X_H_noisy, gamma=gamma_val)
+    C_FF = rbf_kernel(X_F_noisy, X_F_noisy, gamma=gamma_val)
+    C_HF = rbf_kernel(X_H_noisy, X_F_noisy, gamma=gamma_val)
     
     eigs_cH = np.real(np.linalg.eigvals(C_HH))
     eigs_cH.sort()

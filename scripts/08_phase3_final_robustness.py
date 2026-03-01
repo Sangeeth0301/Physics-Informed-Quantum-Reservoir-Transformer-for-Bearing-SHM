@@ -126,12 +126,17 @@ c_spectra_H, c_spectra_F = [], []
 seed_metrics = []
 
 for s in seeds:
+    # --- Add Gaussian Variance ---
+    np.random.seed(s)
+    X_H_noisy = X_H_pca + np.random.normal(0, 0.02, X_H_pca.shape)
+    X_F_noisy = X_F_pca + np.random.normal(0, 0.02, X_F_pca.shape)
+    
     pqkr = PQKR(n_qubits=n_qubits, n_layers=2, seed=s)
     
     # Quantum
-    K_HH = pqkr.compute_kernel(X_H_pca, X_H_pca)
-    K_FF = pqkr.compute_kernel(X_F_pca, X_F_pca)
-    K_HF = pqkr.compute_kernel(X_H_pca, X_F_pca)
+    K_HH = pqkr.compute_kernel(X_H_noisy, X_H_noisy)
+    K_FF = pqkr.compute_kernel(X_F_noisy, X_F_noisy)
+    K_HF = pqkr.compute_kernel(X_H_noisy, X_F_noisy)
     
     q_frob.append(frobenius_divergence(K_HH, K_FF))
     q_mmd_list.append(compute_mmd(K_HH, K_FF, K_HF))
@@ -160,9 +165,9 @@ for s in seeds:
     
     # Classical
     gamma_val = 1.0 / n_qubits
-    C_HH = rbf_kernel(X_H_pca, X_H_pca, gamma=gamma_val)
-    C_FF = rbf_kernel(X_F_pca, X_F_pca, gamma=gamma_val)
-    C_HF = rbf_kernel(X_H_pca, X_F_pca, gamma=gamma_val)
+    C_HH = rbf_kernel(X_H_noisy, X_H_noisy, gamma=gamma_val)
+    C_FF = rbf_kernel(X_F_noisy, X_F_noisy, gamma=gamma_val)
+    C_HF = rbf_kernel(X_H_noisy, X_F_noisy, gamma=gamma_val)
     
     c_frob.append(frobenius_divergence(C_HH, C_FF))
     c_mmd_list.append(compute_mmd(C_HH, C_FF, C_HF))
