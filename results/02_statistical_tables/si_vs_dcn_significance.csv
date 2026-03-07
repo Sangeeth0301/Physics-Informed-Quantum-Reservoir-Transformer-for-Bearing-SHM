@@ -1,0 +1,2 @@
+Hypothesis Test,T-Statistic,p-value,Significant (p<0.05)
+Paired T-test (PR_AUC_SI > PR_AUC_DCN),-0.3824039425845568,6.4448e-01,False

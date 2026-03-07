@@ -1,0 +1,4 @@
+Detection Metric Focus,Healthy State ($\mu \pm \sigma$),Fault Response ($\mu \pm \sigma$)
+DCN Reconstruction Anomaly,0.0033 ± 0.0028,0.0066 ± 0.0030
+Physics ODE Residual Error,0.0003 ± 0.0004,0.0002 ± 0.0001
+Final Instability Score (SI),0.1089 ± 0.2024,0.1486 ± 0.1881

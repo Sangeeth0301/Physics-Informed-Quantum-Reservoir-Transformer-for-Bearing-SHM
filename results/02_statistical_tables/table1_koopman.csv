@@ -1,0 +1,4 @@
+Metric,Healthy Baseline (Mean ± Std),Fault Dynamics (Mean ± Std),p-value (t-test),Interpretation (Units)
+Max Spectral Radius (ρ),1.0008 ± 0.0019,0.9991 ± 0.0021,0.01,Energy bounds near 1 (conserved)
+Unstable Ratio,0.0417 ± 0.0453,0.0126 ± 0.0219,0.02,Healthy more borderline modes
+Mean Modal Frequency,0.0496 ± 0.0059,0.0763 ± 0.0033,<0.01,Fault ~57% higher (Hz) — impulse-driven

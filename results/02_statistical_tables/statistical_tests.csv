@@ -1,0 +1,3 @@
+Test,Metric,Healthy/Fault Separation,p-value,Significant (p<0.01)
+Welch's t-test,Final SI Score,CWRU DCN Output,7.344e-05,True
+Kolmogorov-Smirnov,mrDMD Spectral Radius,CWRU Phase 2 Output,3.018e-03,True
