@@ -163,7 +163,7 @@ def run_master_optimal_pipeline():
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.savefig(os.path.join(results_dir, "master_pipeline_si_curve.png"))
-    plt.show()
+    # plt.show()
 
     print("==========================================================")
     print("MASTER PIPELINE COMPLETE: ALL UPGRADES VALIDATED")

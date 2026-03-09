@@ -30,7 +30,7 @@ def load_de_time(file_path):
             return signal
 
         # Attempt 2: h5py (v7.3 HDF5)
-        print("scipy failed → trying h5py...")
+        print("scipy failed -> trying h5py...")
         with h5py.File(file_path, 'r') as f:
             print("h5py top-level keys:", list(f.keys()))
             for group in f:
@@ -76,7 +76,7 @@ axs[1].legend()
 axs[1].grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.show()
+# plt.show()
 
 # === Zoom plot (first 10k samples – impulses should be visible here) ===
 zoom_start, zoom_end = 0, 10000
@@ -95,9 +95,9 @@ axs_zoom[1].set_ylabel('Acceleration (g)')
 axs_zoom[1].grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.show()
+# plt.show()
 
-print("If you see periodic spikes in the red zoom plot → success! Early fault impulses are visible.")
+print("If you see periodic spikes in the red zoom plot -> success! Early fault impulses are visible.")
 # --- Basic Preprocessing & Windowing ---
 
 window_size = 2048  # common choice for bearing analysis
@@ -130,7 +130,7 @@ axs_win[1].set_xlabel('Sample within window')
 axs_win[1].grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.show()
+# plt.show()
 
 # Save processed data (fast loading later)
 processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed'))
@@ -142,7 +142,7 @@ np.save(os.path.join(processed_dir, "fault_windows.npy"), fault_segments)
 print("Processed windows saved to data/processed/")
 # --- Preprocessing & Windowing (prepare for mrDMD & models) ---
 
-window_size = 2048  # standard for bearing analysis (2048 samples ≈ 0.17 s at 12 kHz)
+window_size = 2048  # standard for bearing analysis (2048 samples approx. 0.17 s at 12 kHz)
 stride = 512        # 75% overlap – good for capturing transients
 
 def segment_signal(signal, window_size, stride):
@@ -174,7 +174,7 @@ axs_win[1].set_ylabel('Acceleration (g)')
 axs_win[1].grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.show()
+# plt.show()
 
 # Save processed windows as .npy (fast loading later)
 processed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'processed'))

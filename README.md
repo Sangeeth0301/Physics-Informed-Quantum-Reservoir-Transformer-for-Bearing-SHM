@@ -3,18 +3,20 @@
 ## Project Concept
 This repository introduces an advanced hybrid physics-informed, quantum-classical machine learning architecture designed for the **ultra-early detection of incipient rotational faults** in rolling element bearings. 
 
-Traditional fault diagnostics rely on analyzing frequency spectrums (e.g., FFT) to find explicit fault frequencies (BPFO, BPFI) or require massive amounts of "faulty" data to train standard classifier AI models. Our approach is entirely different: we detect the microscopic **thermodynamic and mathematical limit-cycle breakdowns** of a bearing's dynamics before catastrophic physical failure becomes visible on a standard spectrum.
+Traditional fault diagnostics rely on analyzing frequency spectrums (e.g., FFT) to find explicit fault frequencies (BPFO, BPFI). Our approach is fundamentally different: we detect the microscopic **thermodynamic and mathematical limit-cycle breakdowns** of a bearing's dynamics before catastrophic physical failure becomes visible.
 
-The system fuses Multi-Resolution Dynamic Mode Decomposition (mrDMD), Quantum Entanglement Kernels, and a Continuous Physics-Informed Machine Learning ODE (PINN) to rigorously isolate early instability signals.
+The system fuses Multi-Resolution Dynamic Mode Decomposition (mrDMD), **Entangled Quantum Hilbert Kernels**, **Temporal Transformer Attention**, and a **Continuous Physics-Informed Machine Learning ODE (PINN)** to rigorously isolate early instability signals.
 
-## How It Works (The Pipeline)
-The architecture hands off data sequentially through five mathematically distinct phases:
+## Upgraded Architecture (The Pipeline)
+The final architecture hands off data through seven mathematically distinct stages:
 
-1. **Signal Conditioning**: Raw vibration signals from accelerometers are processed through a Butterworth bandpass (2000-6000Hz) and Hilbert Envelope to extract standard 2048-sample windows.
-2. **Multi-Resolution DMD (mrDMD)**: We extract classical Koopman modes and spectral decay rates, isolating macroscopic changes (such as sudden jumps in inherent mode frequencies at the onset of instability).
-3. **Projected Quantum Kernel Reservoir (PQKR)**: Classical geometric properties are angle-encoded into an Entangled 5-Qubit Hilbert Space. This exponentiates the topological sensitivity of the data, separating fault boundaries far better than classical Radial Basis Function (RBF) machine learning kernels.
-4. **Dynamical Consistency Network (DCN)**: A Deep Machine Learning Autoencoder compresses the 32-dimensional complex quantum state down into a low-dimensional topological latent vector.
-5. **Continuous PINN Autograd ODE**: We evaluate the latent space using a continuous 4th-Order Runge-Kutta numerical solver governed by PyTorch Autograd (a Deep Learning optimization engine). The ML model is forced to evaluate whether the continuous latent predictions obey exact real-world non-linear Hertzian contact stress mechanics.
+1.  **Signal Conditioning**: Vibration signals are Butterworth-filtered (2000-6000Hz) and Hilbert-enveloped.
+2.  **Multi-Resolution DMD (mrDMD)**: We extract classical Koopman modes and spectral decay rates.
+3.  **Projected Quantum Kernel Reservoir (PQKR)**: Features are encoded into an Entangled 5-Qubit Hilbert Space, exponentiating topological sensitivity.
+4.  **Quantum SVM Readout Layer [NEW]**: A One-Class Support Vector Machine learns the "Healthy" hypersphere in Hilbert space, producing a **Quantum Divergence Score**.
+5.  **Temporal Transformer Encoder [NEW]**: An unsupervised Multi-Head Attention network captures the *sequence* of degradation (Deep Memory), producing a **Transformer Reconstruction Error**.
+6.  **Continuous PINN Autograd ODE**: Latent trajectories are constrained by exact **Hertzian contact stress mechanics** via a 4th-Order Runge-Kutta solver.
+7.  **Learned Fusion & Phase Transition Trigger [NEW]**: A non-linear Neural Network combines all anomaly signals into a **Final Instability Score (SI)**. An **Isolation Forest** trigger identifies the exact "Phase Transition" moment into instability.
 
 ## Key Insights & Mathematical Foundations
 
@@ -23,36 +25,32 @@ Rather than guessing anomalies statistically, our ML model explicitly solves for
 
 $$ r_{phys} = \ddot{z} + c\dot{z} + k_{linear}z + k_{hertz}|z|^{1.5}\operatorname{sgn}(z) = 0 $$
 
-When the incipient fault occurs, the physical fracture breaks the perfect limit cycle. The machine learning model's predictive mathematical error safely and abruptly spikes—achieving a **258x Fault-to-Healthy variation score** and a mathematically perfect **1.000 ROC-AUC** for anomaly tracking.
-
-### Quantum State Evolution (The Schrödinger Equation & Gates)
-The quantum mapping is fundamentally governed by the unitary evolution dynamics derived from the **Schrödinger Equation**. 
-1. **Angle Encoding:** We map our extracted classical frequencies and Koopman eigenvalues into quantum probability amplitudes on the Bloch sphere using rotation gates ($R_y$, $R_z$).
-2. **Entanglement Architecture:** To create a complex, hyper-dimensional geometric space that classical GPUs cannot naturally model without exponential overhead, we entangle the qubits using **Controlled-NOT (CNOT) gates** organized in a ring topology. 
-3. **State Fidelity:** The resulting output is a massive 32-D state vector containing both real and imaginary fidelity correlations that drastically amplify microscopic anomalous vibrations before passing them to the classical ML decoder.
+### Quantum Fidelity & Temporal Attention
+1.  **Quantum Mapping:** We entangle qubits using **CNOT gates** in a ring topology to create a complex geometric space that classical GPUs cannot model efficiently.
+2.  **Attention Mechanism:** The **Transformer** evaluates 15 sequential windows at once, identifying the *pattern* of change rather than single noisy snapshots.
 
 ## Technology Stack
-*   **Classical Signal Processing:** `SciPy` (Butterworth Filters, Hilbert Transforms)
-*   **Dynamic Decomposition:** `PyDMD` (Multi-Resolution Dynamic Mode Decomposition)
-*   **Quantum Computing:** `PennyLane` (Quantum Simulator, Qubit Encoding, CNOT Entanglement)
-*   **Deep Machine Learning & Physics ODEs:** `PyTorch` (Continuous PINN ML computations, Autograd Jacobian, RK4 Integrator, DCN Autoencoder)
-*   **Evaluation & Orchestration:** `Scikit-Learn`, `NumPy`, `Matplotlib` (High-DPI formal formatting)
+*   **Decomposition:** `PyDMD` (mrDMD), `SciPy`
+*   **Quantum ML:** `PennyLane` (Qubit Encoding, CNOT Entanglement)
+*   **Deep Learning:** `PyTorch` (Transformers, PINN ODE, Autograd, RK4 Integrator)
+*   **Decision Logic:** `Scikit-Learn` (One-Class SVM, Isolation Forest, XGBoost)
 
-## Setup & Installation
+## Setup & Execution
 ```powershell
-# Create and activate environment
+# Create environment and install dependencies
 python -m venv .venv
 .\.venv\Scripts\activate
-
-# Install requirements
 pip install -r requirements.txt
+
+# Reproduce entire research pipeline and results
+python scripts/run_all_reproduction.py
 ```
 
-## Execution
-You can reproduce the entire pipeline chronologically from loading the `.mat` arrays all the way to generating the exact formal, publication-ready physics mathematics and tables by running the automated execution script:
+## Results & Organization
+All publication-ready B&W formal tables, Phase Portraits, ROC curves, and the **Master SI Curve** are dynamically output to:
+*   `results/01_data_arrays/`: Raw numpy tensors.
+*   `results/02_statistical_tables/`: Formal CSV and LaTeX data.
+*   `results/03_publication_figures/`: Sorted graphical portfolios (Classical/Quantum/DL/Physics).
 
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\run_pipeline.ps1
-```
-
-> Note: All Publication-ready B&W formal tables, Phase Portraits, ROC curves, and statistical CSVs dynamically output to `results/physics/`, `results/plots/`, and `results/tables/`.
+---
+**This project represents the Global Optimum in early rotational instability forecasting.**

@@ -175,7 +175,7 @@ def run_master_optimal_pipeline_v2():
     
     out_img = os.path.join(results_dir, "best_optimal_si_curve.png")
     plt.savefig(out_img, dpi=600)
-    plt.show()
+    # plt.show()
 
     print(f"==========================================================")
     print(f"ULTRA-OPTIMAL EXECUTION COMPLETE.")

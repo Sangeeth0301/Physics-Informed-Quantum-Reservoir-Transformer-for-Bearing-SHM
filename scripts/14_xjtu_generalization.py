@@ -85,7 +85,7 @@ def run_xjtu_synthetic_generalization():
     out_dir = os.path.join(base_dir, 'results', 'final_pipeline')
     os.makedirs(out_dir, exist_ok=True)
     plt.savefig(os.path.join(out_dir, "xjtu_generalization_results.png"))
-    plt.show()
+    # plt.show()
     
     print(f"XJTU-SY Generalization Successful. Transition Triggered at Day/Frame: {death_idx}")
     print("FINAL VALIDATION FOR DATASET EXPANSION COMPLETE.")

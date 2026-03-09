@@ -63,7 +63,7 @@ p_unstable = ttest_ind(h_unstable, f_unstable)[1]
 p_freq = ttest_ind(h_freqs, f_freqs)[1]
 
 table1_data = {
-    "Metric": ["Max Spectral Radius (ρ)", "Unstable Ratio", "Mean Modal Frequency"],
+    "Metric": ["Max Spectral Radius (rho)", "Unstable Ratio", "Mean Modal Frequency"],
     "Healthy Baseline (Mean ± Std)": [
         format_mean_std(np.mean(h_radii), np.std(h_radii)),
         format_mean_std(np.mean(h_unstable), np.std(h_unstable)),
