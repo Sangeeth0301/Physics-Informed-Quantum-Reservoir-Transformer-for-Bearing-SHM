@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Physics-Informed Quantum Reservoir Transformer for Incipient Bearing Instability Early Warning"
+version: 1.0.0
+date-released: "2025-01-01"
+authors:
+  - family-names: Sangeeth
+    given-names: ""
+    alias: Sangeeth0301
+    orcid: ""
+repository-code: "https://github.com/Sangeeth0301/Physics-Informed-Quantum-Reservoir-Transformer-for-Bearing-SHM"
+url: "https://github.com/Sangeeth0301/Physics-Informed-Quantum-Reservoir-Transformer-for-Bearing-SHM"
+abstract: >-
+  A hybrid quantum-classical machine learning architecture for ultra-early
+  detection of incipient rotational faults in rolling element bearings.
+  The system fuses Multi-Resolution Dynamic Mode Decomposition (mrDMD),
+  Entangled Quantum Hilbert Kernels (PQKR), Temporal Transformer Attention,
+  and a Continuous Physics-Informed Neural ODE (PINN) constrained by
+  Hertzian contact mechanics to produce a continuous Instability Score (SI)
+  that provides early warning before fault frequencies appear in the spectrum.
+keywords:
+  - quantum-machine-learning
+  - bearing-fault-detection
+  - predictive-maintenance
+  - physics-informed-neural-networks
+  - dynamic-mode-decomposition
+  - koopman-operator
+  - pennylane
+  - pytorch
+  - transformer
+  - anomaly-detection
+  - rotating-machinery
+  - structural-health-monitoring
+license: MIT

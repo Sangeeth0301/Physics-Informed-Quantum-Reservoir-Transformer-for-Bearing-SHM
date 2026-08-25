@@ -101,7 +101,7 @@ pca = PCA(n_components=n_qubits, random_state=42)
 X_H_pca = pca.fit_transform(X_H_norm)
 X_F_pca = pca.transform(X_F_norm)
 
-# --- 2. MULTI-SEED STATISTICAL SEPARABILITY (≥ 10 SEEDS) ---
+# --- 2. MULTI-SEED STATISTICAL SEPARABILITY (>= 10 SEEDS) ---
 print("\n[*] Executing Multi-Seed Quantum Hardware Simulations (n=10)...")
 n_seeds = 10
 quantum_frob, quantum_mmd, classical_frob, classical_mmd = [], [], [], []

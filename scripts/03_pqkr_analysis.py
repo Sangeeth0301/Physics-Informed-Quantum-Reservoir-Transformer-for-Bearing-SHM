@@ -186,7 +186,7 @@ if __name__ == "__main__":
     has_nans = np.isnan(best_Q_H).any()
     
     print(f"Kernel symmetric? {is_symmetric}")
-    print(f"Kernel diagonals ≈ 1? {is_diag_one}")
+    print(f"Kernel diagonals approx. 1? {is_diag_one}")
     print(f"Contains NaNs? {has_nans}")
 
 

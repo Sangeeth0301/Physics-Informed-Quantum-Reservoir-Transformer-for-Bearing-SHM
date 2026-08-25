@@ -1,0 +1,3 @@
+Method,Mean Frobenius Divergence,Maximum Mean Discrepancy (MMD)
+Classical RBF Kernel,0.9726 ± 0.0000,0.5457 ± 0.0000
+Projected Quantum Kernel (PQKR),0.9566 ± 0.0000,0.4727 ± 0.0000

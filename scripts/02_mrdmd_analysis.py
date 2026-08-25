@@ -53,7 +53,7 @@ plt.plot(test_env[:2000], label="Envelope", linewidth=2)
 plt.legend()
 plt.title("Envelope Debug Check")
 plt.grid(True)
-plt.show()
+# plt.show()
 
 # ============================================================
 # PARAMETERS (research-sensible defaults)
@@ -236,7 +236,7 @@ else:
 
     plt.tight_layout()
     plt.savefig(os.path.join(results_dir, "mrdmd_modes_fault.png"), dpi=300)
-    plt.show()
+    # plt.show()
 
 # ============================================================
 # mrDMD ON HEALTHY WINDOW
@@ -270,7 +270,7 @@ if (mrdmd_fault.modes.shape[1] > 0) and (mrdmd_healthy.modes.shape[1] > 0):
     plt.grid(True, alpha=0.3)
     plt.legend()
     plt.savefig(os.path.join(results_dir, "mrdmd_mode_comparison.png"), dpi=300)
-    plt.show()
+    # plt.show()
 else:
     print("⚠️ Mode comparison skipped due to missing modes.")
 
@@ -332,8 +332,8 @@ for key in ["spectral_radius", "unstable_ratio", "mean_frequency"]:
     f_mean, f_std = summarize(fault_metrics, key)
 
     print(f"\nMetric: {key}")
-    print(f"Healthy → mean: {h_mean:.4f}, std: {h_std:.4f}")
-    print(f"Fault   → mean: {f_mean:.4f}, std: {f_std:.4f}")
+    print(f"Healthy -> mean: {h_mean:.4f}, std: {h_std:.4f}")
+    print(f"Fault   -> mean: {f_mean:.4f}, std: {f_std:.4f}")
 
 # === Q1 Journal Publication Graphic: Koopman Benchmarking Tables ===
 tables_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'results', 'tables'))
