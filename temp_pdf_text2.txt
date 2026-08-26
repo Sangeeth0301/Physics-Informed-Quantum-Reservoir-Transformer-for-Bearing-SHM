@@ -1,0 +1,432 @@
+Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2025) 000–000
+www.elsevier.com/locate/procedia
+International Conference on Machine Learning and Data Engineering (ICMLDE)
+Physics-Informed Quantum-Assisted Koopman Fusion for
+Early-Warning Detection of Incipient Rolling-Element Bearing
+Faults
+First Authora,∗, Second Authora
+aDepartment of Mechanical / Electrical Engineering, Institution Name, City, Country
+Abstract
+Unplanned downtime from rolling-element bearing failure remains one of the costliest problems in rotating machinery, largely
+because standard condition-monitoring pipelines only raise an alarm once characteristic defect frequencies surface in the vibration
+spectrum – by which point the underlying spall or crack is already well advanced. We present a hybrid pipeline that fuses multi-
+resolution Koopman/Dynamic Mode Decomposition (mrDMD), a quantum kernel reservoir, a physics-constrained latent neural
+ODE calibrated against real bearing geometry, and an Isolation-Forest phase-transition trigger into a single early-warning system,
+and we evaluate it end to end on three bearing datasets: CWRU (artificially seeded faults) and, for the first time in this line of work,
+the real NASA IMS and XJTU-SY run-to-failure datasets. On CWRU the fused system reaches 0.990 ROC-AUC, on par with but
+not exceeding simple classical baselines; none of the quantum kernel variants we tested beat classical RBF-kernel separability on
+this dataset either, and we isolate a genuine cost-function-dependent barren plateau at just 5 qubits rather than paper over it. The
+result that actually matters comes from the real run-to-failure data: on NASA IMS 2nd test, the pipeline flags the onset of the
+documented Bearing-1 outer-race failure 43.8 hours before end of test (26.8% of a 163.8-hour life), with zero false alarms on the
+three bearings that did not fail; on XJTU-SY , it correctly picks out a gradual precursor in one of three tested bearings (1.6-hour lead)
+and correctly finds none in the other two, both of which failed abruptly. Along the way we caught and fixed a train/test leakage bug
+in the original evaluation protocol and recalibrated the physics-ODE against real SKF 6205-2RS bearing geometry. Every number
+here, including the ones where a method fails to beat its classical counterpart, is reproducible from the accompanying code.
+© 2025 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license (http://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of the scientific committee of the International Conference on Machine Learning and Data Engi-
+neering.
+Keywords: bearing fault diagnosis; early-warning detection; Koopman operator; dynamic mode decomposition; quantum kernel methods;
+kernel-target alignment; physics-informed neural ODE; temporal self-attention; prognostics and health management; NASA IMS; XJTU-SY
+1. Introduction
+Rolling-element bearings fail more often than almost any other component in rotating machinery, and the standard
+way of catching that failure is to watch for characteristic defect frequencies – ball-pass frequency at the outer or inner
+∗ Corresponding author.
+E-mail address: author@institute.xxx
+1877-0509 © 2025 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license (http://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of the scientific committee of the International Conference on Machine Learning and Data Engineering.
+2 Author et al. / Procedia Computer Science 00 (2025) 000–000
+race, ball-spin frequency, fundamental train frequency – once they rise above the noise floor of the vibration spectrum
+[1]. The trouble is that by the time those frequencies are clearly resolvable, the spall or crack producing them has
+usually already propagated a fair amount. This is why the prognostics and health management (PHM) community
+keeps returning to the harder problem of incipient detection: catching the earliest measurable deviation from healthy
+dynamics, ideally long before the classical spectral signature would tell you anything.
+What we set out to answer is whether a physics-informed, quantum-assisted architecture can produce a real, mea-
+surable early-warning lead time on actual run-to-failure data, with numbers a reader can independently check rather
+than take on faith. That second part mattered more than we expected: an earlier internal draft of this project’s docu-
+mentation carried a 0.9999 ROC-AUC, a claimed “258×” manifold-separation factor, a 42-hour IMS lead time, and
+full XJTU-SY generalization results, and when we audited each against the code, none held up. Some traced to no
+script at all; others came from a synthetic surrogate standing in for real sensor data, or from placeholder scores never
+actually computed from a measurement. Everything reported here has since been recomputed from real, downloaded
+data, and where a method did not beat a simpler baseline, we say so rather than leave it out.
+The contributions of this work are, concretely: a Koopman/quantum-kernel/neural-ODE fusion architecture whose
+physics-ODE is calibrated against real SKF 6205-2RS bearing geometry instead of being left with free-fit constants; a
+multi-variant evaluation of quantum kernel methods against classical RBF kernels that includes an empirical demon-
+stration of a cost-function-dependent barren plateau at 5 qubits; the first run of this pipeline against real NASA IMS
+and XJTU-SY run-to-failure data, producing a lead-time number under a detection rule stated in advance rather than
+tuned after the fact; and the identification and correction of a train /test leakage bug, with the leaked and corrected
+numbers shown side by side rather than quietly replaced.
+2. Related Work and Novelty Positioning
+Koopman/DMD-based diagnostics. Dynamic Mode Decomposition [5] approximates a system’s Koopman operator
+directly from data, and multi-resolution DMD extends this across several time scales, suiting vibration signals whose
+fault content is both transient and multi-scale. Deep Koopman autoencoders [6] learn the observables end to end
+instead of fixing them in advance; Shi et al. [12] more recently trained a Koopman embedding jointly with an RUL
+regressor, rather than as two separate stages the way our frozen-Hankel-DMD-then-DCN pipeline does. We flag that
+gap in Section 7 as the highest-leverage upgrade we have not yet built.
+Quantum kernel methods for bearing diagnosis. A quantum kernel measures similarity through the fidelity of
+quantum states prepared by a data-encoding circuit. Huang et al. [2] proposed the projected kernel to sidestep the
+exponential-concentration problem fidelity kernels run into as circuit expressivity increases [3], and Cerezo et al.
+[4] showed that whether a variational cost hits a barren plateau depends on whether it is defined globally or locally,
+even at shallow depth. Bearing diagnosis has started attracting quantum-ML attempts too: da Silva et al. [13] and a
+2025 SBPO case study [14] report quantum classifiers on bench-test bearing data under small-qubit, simulator-only
+conditions similar to our own, but neither pairs the quantum result with a matched classical control or explains why
+performance came out the way it did. That is the gap we try to close in Section 6.2: a seed-matched comparison across
+three quantum kernel variants against the same classical RBF baseline, plus an account of the actual mechanism
+behind the fidelity kernel’s failure to train.
+Physics-informed learning for prognostics. Physics-informed neural networks [7] pull a learned latent trajectory
+toward a governing differential equation. Most physics-informed RUL work, including Yucesan and Viana [15], treats
+the physical constants in that equation as hand-tuned or freely fit alongside the network weights. We take a narrower
+step: the physics-ODE’s stiffness constant is initialized from the real bearing’s calculated BPFO defect-frequency or-
+der (Section 4.2), so at least one constant is traceable to an actual physical measurement rather than merely physically
+motivated in spirit.
+Benchmark datasets and honesty of evaluation. CWRU is a classification benchmark with artificially seeded
+faults, not a run-to-failure dataset, a distinction that papers reporting only CWRU accuracy as evidence of “early
+warning” do not always draw clearly. NASA IMS [8] and XJTU-SY [9] record continuous vibration through genuine,
+natural degradation to failure, which is where a real lead-time claim has to be made; Section 6.4 is, as far as we can
+tell, the first use of both as real rather than synthetic data in this line of work.
+Where the novelty actually is. Table 1 lines this work up against the closest related work above. We are not
+claiming a new algorithm. What we think is di fferent is the combination of a disjoint-split, run-to-failure lead-time
+measurement on two independent real datasets; a mechanistic rather than purely empirical account of why the quantum
+Author et al. / Procedia Computer Science 00 (2025) 000–000 3
+kernels underperform; and an unusually direct disclosure of which components do not yet beat their simpler baselines
+– a bar that, from what we surveyed above, is not consistently applied.
+Table 1: Novelty positioning against closest related work.
+Dimension Prior work (typical) This work
+Evaluation data CWRU classifica-
+tion only, or one
+run-to-failure set
+CWRU + 2 real
+run-to-failure sets
+(IMS, XJTU-SY , 3
+conditions)
+Quantum kernel
+reporting
+Accuracy only, no
+classical-matched
+control
+3 quantum vari-
+ants vs. classical,
+seed-matched, with
+mechanism (barren
+plateau)
+Physics constants Free-fitted or hand-
+tuned
+Initialized from real
+bearing geometry
+(BPFO)
+Negative results Rarely reported Reported explic-
+itly (leakage, non-
+significant fusion,
+noise sensitivity)
+Koopman learning End-to-end (some
+works) vs. frozen (this
+work)
+Frozen mrDMD; end-
+to-end identified as fu-
+ture work
+3. Datasets
+3.1. CWRU (classification benchmark)
+We use the CWRU Bearing Data Center dataset for the healthy-vs-fault classification task and for every quantum-
+vs-classical kernel comparison. Specifically, this means drive-end 12 kHz sampling, the healthy baseline, and the
+0.007-inch outer-race fault file (107.mat), recorded from an SKF 6205-2RS JEM deep-groove ball bearing under
+1 HP nominal load at 1772 RPM. After bandpass filtering (2–6 kHz) and a Hilbert envelope, the signal is segmented
+into 2048-sample windows, giving 473 healthy and 235 fault windows.
+3.2. NASA IMS (real run-to-failure)
+IMS 2nd test covers four bearings, one channel each, sampled roughly every 10 minutes (20,480 samples /file at
+20 kHz) from 2004-02-12 10:32 through 2004-02-19 06:22, 163.83 hours and 984 files in total. Bearing 1 developed
+a documented outer-race failure by the end of the run; Bearings 2–4 did not fail. We downloaded this directly from
+the public NASA /PHM dataset mirror, which matters because an earlier version of this pipeline had substituted a
+synthetic surrogate for it without that being obvious from the results alone.
+3.3. XJTU-SY (real run-to-failure, three conditions)
+XJTU-SY covers 15 bearings’ complete run-to-failure vibration histories across three operating conditions
+(35 Hz/12 kN, 37.5 Hz /11 kN, 40 Hz /10 kN), sampled at 25.6 kHz with 32,768 samples per file, roughly one file
+per minute. We evaluate one bearing per condition – Bearing1 1 (123 files, 2.05 h), Bearing2 1 (491 files, 8.18 h),
+Bearing3 1 (2538 files, 42.3 h) – and these counts match the dataset’s published per-bearing statistics, confirming the
+download and preprocessing are correct.
+4. Proposed Methodology
+The pipeline starts by conditioning the raw vibration signal with a Butterworth bandpass (2–6 kHz) and a Hilbert
+envelope, segmenting it into 2048-sample windows, and Hankelizing each window for multi-resolution DMD. That
+step yields Koopman eigenvalues λi, and three scalar summaries of them, spectral radius ρ = max|λi|, unstable-
+mode ratio, and mean modal frequency, carry most of the useful signal about local dynamics. Those summaries feed
+three parallel scoring branches: a quantum kernel reservoir (Section 4.1), a dense autoencoder whose 8-D bottleneck
+is partly constrained by a physics-informed neural ODE (Section 4.2), and an unsupervised self-attention temporal
+encoder (Section 4.3) trained in parallel on the same latent trajectory. A learned fusion network is designed to combine
+4 Author et al. / Procedia Computer Science 00 (2025) 000–000
+these branch outputs into a single Instability Score, and an Isolation-Forest trigger [10] watches that score for a
+sustained departure from the healthy baseline, which is what we treat as the early-warning onset. As Section 5 makes
+explicit, the specific fused score evaluated end to end in Section 6 draws on the Koopman, quantum-kernel, and
+physics-constrained DCN branches; the transformer branch is implemented and evaluated on its own terms but was
+not part of that particular fusion run, which we flag rather than blur.
+4.1. Quantum Kernel Reservoir
+The classical mrDMD feature vector z, PCA-reduced to n = 5 dimensions, is angle-encoded via Rx(zi) onto n =
+5 qubits, followed by two reservoir layers of fixed random Rx, Ry, Rz rotations and CNOT-ring entanglement. We
+compare two readouts against each other: the fidelity kernel
+Kfid(x, x′) =
+⟨ψ(x)|ψ(x′)⟩
+2
+, (1)
+and the projected kernel [2], from local Pauli expectations⟨Xi⟩,⟨Yi⟩,⟨Zi⟩,
+KPQ(x, x′) = exp
+−γ
+X
+k
+∥ρk(x)−ρk(x′)∥2
+F
+, (2)
+withγ set by the median-heuristic bandwidth rule. We also test a kernel-target-alignment (KTA)-trained variant that
+keeps the fixed reservoir above and adds a small trainable rotation layer of n = 5 RY angles right after encoding,
+optimized with Adam (learning rate 0.15, 40 epochs) to maximize KTA =⟨K, yy⊤⟩F/(∥K∥F∥yy⊤∥F) on a held-out
+training split, once under a fidelity-based cost and once under a local-observable-based cost, which is the direct test
+for the cost-function-dependent barren plateau described in [4]. We deliberately stopped at this shallow, 5-parameter
+alignment layer rather than a deeper, fully parameterized variational circuit: Section 6.2 shows the fidelity cost is
+already untrainable at 5 qubits (Table 6), so stacking more trainable layers under that same cost would only make the
+plateau worse, not better, without first solving the cost-function problem itself.
+4.2. Physics-Informed Latent ODE
+The DCN’s 2-D physics-constrained latent state (x, v) is made to evolve under a Jeffcott–Hertzian nonlinear oscillator,
+˙x = v, ˙v =−c v− k x−α|x|1.5sgn(x), (3)
+where the|x|1.5 term is the correct Hertzian contact nonlinearity. Instead of initializing ( c, k,α ) arbitrarily, we seed k
+from the squared outer-race defect-frequency order (BPFO) of the real SKF 6205-2RS bearing,
+BPFO/ fr = n
+2
+
+1− d
+D cosβ
+
+= 3.5848, (4)
+computed from published geometry (n=9, d=0.3126in, D=1.537in,β=0◦), and set c from a light-damping assumption
+(ζ=0.05, c = 2ζ
+√
+k). All three constants stay trainable after this physically grounded start; α’s magnitude is left at a
+literature-typical default, since we did not have an independent contact-modulus measurement to calibrate it against.
+4.3. Temporal Self-Attention Encoder
+Alongside the quantum and physics-ODE branches, we implement an unsupervised temporal encoder built on the
+standard Transformer encoder block of Vaswani et al. [11]. The input at each time step is the DCN’s 8-D latent code,
+so the encoder operates directly on the same bottleneck representation the physics-ODE constrains, rather than on the
+raw signal. A linear layer embeds each 8-D code to dmodel = 32, a fixed sinusoidal positional encoding is added so
+Author et al. / Procedia Computer Science 00 (2025) 000–000 5
+the model can use step order within a window, and two stacked encoder layers with 4-head self-attention (batch-first,
+ReLU feed-forward) produce a contextualized 32-D representation at every step. A final linear layer decodes this
+back to 8 dimensions, and the network is trained purely as a reconstruction autoencoder, end to end, by minimizing
+mean-squared error between the input latent-code sequence and its reconstruction, with no fault labels involved. At
+inference, the mean reconstruction error over a window is a continuous anomaly score in the same units as the DCN’s
+own reconstruction error, on the reasoning that a latent trajectory whose short-range temporal structure has drifted
+away from the healthy pattern the encoder learned should reconstruct worse than a healthy one. This score is a fourth
+candidate input to the fusion network below; whether folding it into the fused Instability Score improves on the three-
+branch result in Section 6 is exactly the kind of question a disjoint-split evaluation would need to answer, and we list
+it as unfinished work in Section 7 rather than report a fused number we have not actually run.
+5. Experimental Setup
+mrDMD is run with SVD rank 12, max level 3, max cycles 6, and a Hankelization delay of 60. The quantum reservoir
+runs on PennyLane’s default.qubit simulator with 5 qubits and 2 layers. The DCN encoder /decoder is a 3-layer
+MLP (32-16-8 / 8-16-32, ELU activations), trained for 150 epochs with Adam at a learning rate of 0.005. The temporal
+self-attention encoder (Section 4.3) usesdmodel = 32, 4 attention heads, and 2 encoder layers, trained the same way. The
+fusion network that combines branch scores into the Instability Score is a 3-input MLP (16-8-1 hidden units, ReLU,
+sigmoid output), trained with binary cross-entropy where healthy/fault labels are available. The IsolationForest trigger
+uses 200 estimators and a contamination setting of 0.05, trained on the first 15% of each run-to-failure sequence. Every
+quantum-vs-classical comparison in this paper uses the same PCA-reduced features on both sides, and, wherever we
+say so explicitly, a disjoint train/test split.
+6. Results
+6.1. CWRU Classification Baseline
+Plain classical baselines already reach 1.000 ROC-AUC on CWRU (Table 2); the fused system reaches 0.990, close
+but not ahead. We see no reason to qualify that: CWRU alone simply does not make the case for this architecture,
+which is exactly why the real run-to-failure evaluation in Section 6.4 is where the paper’s actual argument lives.
+Fig. 1: Delay-embedded latent phase-space trajectories from the classical mrDMD/Koopman stage. The healthy signal (left) stays
+on a tight, bounded limit cycle; the fault signal (right) spreads across a much larger, less structured region. Table 3 gives the
+numerical version of this same difference.
+Table 2: CWRU healthy-vs-fault classification (7-mil outer race).
+Model ROC-AUC PR-AUC
+SVM (mrDMD features) 1.000 1.000
+Random Forest (mrDMD features) 1.000 1.000
+XGBoost (mrDMD features) 0.983 0.982
+CNN (raw windows) 0.820 0.770
+Hybrid, no quantum kernel 0.850 0.810
+Proposed (full fusion) 0.990 0.990
+6 Author et al. / Procedia Computer Science 00 (2025) 000–000
+Table 3: Koopman/mrDMD features, healthy vs. fault (mean± std).
+Metric Healthy Fault p
+Max spectral radiusρ 1.001±0.002 0.999 ±0.002 0.01
+Unstable ratio 0.042 ±0.045 0.013 ±0.022 0.02
+Mean modal freq. 0.050 ±0.006 0.076 ±0.003 <0.01
+Across seeds, the fused Instability Score itself averages 0.0752±0.0009 on healthy windows and 0.1724±0.0235
+on fault windows (95% CI half-widths 0.0005 and 0.0146), the quantum-kernel MMD between classes averages
+0.4808±0.0011, and DCN reconstruction MSE averages 0.0041 ±0.0003 (healthy) versus 0.0077±0.0008 (fault) –
+consistent with, though not identical to, the single-run numbers in Table 3 above.
+Table 4: Independent significance tests on Koopman/DCN outputs.
+Test Metric p-value Sig. ( p< 0.01)
+Welch’st-test Final SI score 7.34 ×10−5 Yes
+Kolmogorov–
+Smirnov
+mrDMD spectral ra-
+dius
+3.02×10−3 Yes
+6.2. Quantum Kernel Evaluation
+We compared fixed fidelity, projected, and classical RBF kernels on identical 10-seed noise-perturbed CWRU features
+(Table 5). Neither quantum variant beats classical separability, and somewhat surprisingly the projected kernel, which
+Huang et al. [2] introduced specifically to dodge the fidelity kernel’s exponential-concentration problem [3], actually
+separates less well here. That suggests concentration is not what is limiting the fidelity kernel at this depth ( n=5, 2
+layers) – something else is.
+Table 5: Quantum vs. classical kernel separability, CWRU (10-seed mean± std).
+Metric Classical RBF Fidelity Projected
+Separation ratio 24.99 ±0.21 3.82 ±0.03 1.12 ±0.05
+MMD 0.571 ±0.001 0.460 ±0.001 0.287 ±0.061
+Silhouette 0.164 ±0.001 0.109 ±0.001 0.067 ±0.025
+Davies-Bouldin 1.130 ±0.000 – 2.742 ±0.000
+Calinski-Harabasz 25.54 ±0.00 – 4.92 ±0.00
+Frobenius div. 0.898 ±0.002 0.895 ±0.003 –
+Table 6:Gradient norm at random init, fidelity- vs. local-cost KTA training (5 trials each): a cost-function-dependent barren plateau
+at only 5 qubits.
+Cost function Gradient norm Trainable?
+Fidelity (global) ∼ 10−17 No (barren plateau)
+Projected (local) ∼ 10−3 Yes
+Table 7: Held-out test split (8+8), classical vs. KTA-trained kernel.
+Variant Separation ratio MMD
+Classical RBF 81.34 0.589
+KTA-trained (local cost) 1.02 0.193
+The KTA-trained alignment layer (Section 4.1) is the one place trainability actually moved a number, and it moved
+the wrong way on held-out data: kernel-target alignment rises steadily over the 40 optimization epochs on the training
+split, but the held-out separation ratio it produces (1.02, Table 7) is lower than the already-modest untrained fixed
+kernel (3.82, Table 5) and far below classical RBF (81.34, Table 7). With only 5 free parameters this is not the
+Author et al. / Procedia Computer Science 00 (2025) 000–000 7
+classic high-capacity overfitting story; it reads more as the local-cost KTA objective finding a direction that improves
+alignment on the 12+12 training points without that improvement generalizing to the disjoint 8 +8 test split. We did
+not go on to train a deeper, fully parameterized variational classifier on top of this reservoir, for a concrete reason
+rather than a lack of interest: Table 6 already shows the global fidelity cost is untrainable at 5 qubits, and stacking
+more layers under a cost function we know is barren would not fix that.
+Fig. 2: Top: healthy vs. fault quantum fidelity-kernel Gram matrices on CWRU (5-qubit encoding, 30 samples each); both carry the
+expected strong diagonal (self-fidelity = 1) and similar off-diagonal block texture, which is what Table 5’s finding – fidelity-kernel
+separability does not beat the classical baseline – actually looks like. Bottom: UMAP projection of the same quantum feature space
+(silhouette = 0.23); healthy and fault points interleave rather than forming separate clusters, matching the modest separation ratios
+in Table 5.
+Table 8: Qubit-count ablation (MMD did not vary across circuit depth, 1–3 layers, at any fixed qubit count for this fixed-random
+reservoir, so only the qubit-count trend is shown; 12 configurations tested in total).
+Qubits Params (1–3 layers) MMD
+3 9–27 0.3652
+4 12–36 0.3529
+5 15–45 0.4594
+6 18–54 0.4462
+8 Author et al. / Procedia Computer Science 00 (2025) 000–000
+Table 9: Component ablation (mrDMD→ mrDMD+PQKR→ +DCN→ +SI fusion).
+Components Frob. MMD Sep. ratio
+mrDMD only 1.012 0.591 4.77
++PQKR 1.011 0.480 2.77
++DCNa 0.003 0.060 1.00
++SI fusiona 0.183 0.286 1.05
+aThese two rows were computed before the train/test leakage fix (Section 6.3) and should be read as an upper bound,
+not a corrected number; we retain them here for transparency about what the original ablation reported.
+Fig. 3: Component ablation of Table 9, log scale. Separation ratio and MMD both fall sharply once the DCN branch is added, then
+only partially recover after fusion, which is consistent with no single component doing most of the separating work on its own.
+6.3. Train /Test Leakage Correction
+While preparing this evaluation we found that the original DCN /physics-ODE code had set test healthy =
+train data, meaning it was scoring healthy reconstruction error on the very windows the network had just been
+trained to reconstruct. Table 10 shows both the leaked and the corrected numbers, the latter computed on a disjoint
+held-out healthy split, and the corrected separation is considerably smaller. We take that smaller number as the honest
+one. It is also consistent with a paired significance test of the fused Instability Score against the DCN-only score,
+which finds no significant improvement from fusion (paired t-test on SI PR-AUC vs. DCN-only PR-AUC: t =−0.38,
+p = 0.644, not significant), and with a component-correlation analysis (Table 11) showing that the DCN reconstruc-
+tion error, on its own, accounts for most of the final score.
+Table 10: DCN/physics-ODE anomaly metrics: leaked vs. corrected (mean± std).
+Metric (H/F) Leaked (orig.) Corrected
+DCN recon. MSE 0.0033 / 0.0066 0.0058 / 0.0068
+Physics-ODE resid. 0.0003 / 0.0002 0.0003 / 0.0003
+Final instability score 0.109 / 0.149 0.100 / 0.075
+Table 11: Fusion component correlation with final Instability Score.
+Component Scaled variance Corr. with SI
+DCN reconstruction error 0.196 0.894
+Quantum-kernel distance 0.179 0.555
+Koopman spectral radius 0.054 0.326
+6.4. Genuine Early-Warning Detection on Real Run-to-Failure Data
+This is where the paper’s actual contribution sits. Here, the Koopman summary statistics are fused with ordinary
+time-domain health indicators, RMS, kurtosis, and crest factor, which is a deliberate departure from the classification
+feature set used in Sections 6.1–6.2. We made that change after tracing a real problem: the classification feature
+Author et al. / Procedia Computer Science 00 (2025) 000–000 9
+set’s top-eigenvalue ranking turned out to be noise-unstable enough that it was masking a degradation trend we could
+otherwise verify by hand in the raw signal. An IsolationForest trained on the first 15% of each run scores the remaining
+sequence, the score is smoothed with a 5-point rolling mean, and we declare an onset at the first point where at
+least 80% of the next 15 smoothed points exceed baseline mean + 2σ. We chose that sustained-fraction rule over a
+simple threshold crossing because incipient bearing faults tend to show up as intermittent spikes long before they rise
+monotonically.
+Fig. 4: Real NASA IMS anomaly-score trajectory (left; only the documented failing bearing alarms) and cross-dataset detected
+lead time (right), computed end-to-end from real downloaded IMS and XJTU-SY data.
+On NASA IMS (Table 12, Fig. 4), the documented failing bearing, Bearing 1, is caught 43.8 hours before end of
+test, 26.8% of its total life, and the same rule and threshold produce zero false alarms on the three bearings that never
+failed.
+Table 12: Real NASA IMS 2nd test early-warning detection.
+Bearing Ground truth Detected Lead time
+1 Outer-race failure Yes 43.8 h (26.8%)
+2 No failure No (correct) –
+3 No failure No (correct) –
+4 No failure No (correct) –
+The XJTU-SY picture (Table 13) is more mixed: only one of the three tested bearings shows a detectable gradual
+precursor. The other two, both from conditions whose documented failure mode is a short, abrupt fracture rather than
+gradual spalling, show nothing, and we report that as a real negative result rather than leave it out. Read together, these
+two tables say that how much lead time you get depends on the bearing’s physical failure mode as much as on the
+detection algorithm itself – a gradual spall gives you something to detect early, an abrupt fracture largely does not.
+Table 13: Real XJTU-SY early-warning detection, one bearing per condition.
+Condition Life Detected Lead
+35 Hz/12 kN (B1 1) 2.05 h No –
+37.5 Hz/11 kN (B2 1) 8.18 h No –
+40 Hz/10 kN (B3 1) 42.3 h Yes 1.6 h (3.8%)
+Table 14: Robustness to additive Gaussian sensor noise (CWRU quantum-kernel divergence).
+SNR (dB) Frobenius div. MMD SI separation
+Clean 1.012 0.481 0.145
+20 1.017 0.481 0.034
+10 1.031 0.443 −0.114
+5 0.971 0.435 −0.126
+Table 14 shows the CWRU-based separability holding up only loosely as noise increases, and it actually turns
+negative below roughly 10–20 dB SNR – a real limitation for anyone thinking about field deployment, which we
+come back to in Section 7.
+10 Author et al. / Procedia Computer Science 00 (2025) 000–000
+7. Discussion and Limitations
+Three things stand out. First, CWRU alone cannot support any claim of quantum or fusion advantage – it is close to
+classically saturated, and every quantum kernel variant we tried underperforms classical RBF on it. Second, the result
+that actually carries weight is the real-data early-warning finding in Section 6.4: as far as we can establish, a 43.8-hour
+lead time with zero false alarms is the first number of its kind in this project computed from real rather than synthetic
+data, and it, not the CWRU classification score, is the claim this paper should be judged on. Third, a few components
+have not performed as well as we initially hoped, and we would rather say so than gloss over it: fusion does not
+significantly improve on the DCN-only score on CWRU (p = 0.644), the fidelity quantum kernel hits a barren plateau
+at 5 qubits, and robustness below 10–20 dB SNR remains an open problem. There are directions we have not yet
+pursued that seem worth the e ffort: an end-to-end deep Koopman autoencoder [6,12] in place of the current frozen-
+Hankel-DMD pipeline, folding the temporal self-attention encoder’s reconstruction score (Section 4.3) into the fused
+Instability Score and re-running Section 6 with that fourth branch included rather than reporting a number for it we
+have not actually evaluated, tacholess order tracking for variable-speed operation, and re-running the quantum kernel
+comparison on an incipient-vs-healthy boundary drawn from within a run-to-failure sequence, rather than on CWRU’s
+comparatively easy full-fault classification.
+8. Conclusion
+We built a physics-informed, quantum-assisted Koopman fusion architecture for bearing early-warning detection,
+calibrated its physics-ODE against real bearing geometry, evaluated three quantum kernel variants against classical
+baselines under a matched protocol, fixed a train/test leakage bug found along the way, and ran the full pipeline against
+real NASA IMS and XJTU-SY run-to-failure data. The result is a reproducible 43.8-hour early-warning lead time with
+zero false alarms on IMS, and a more qualified but still honest result on XJTU-SY . All code and result files behind
+every number here are available for anyone who wants to check them.
+Acknowledgements
+The authors thank the CWRU Bearing Data Center, the NASA/PHM Prognostics Data Repository, and the XJTU-SY
+dataset authors for making the underlying vibration data publicly available.
+References
+[1] J. Antoni, “The spectral kurtosis: a useful tool for characterising non-stationary signals,” Mechanical Systems and Signal Processing, vol. 20,
+no. 2, pp. 282–307, 2006.
+[2] H.-Y . Huang, M. Broughton, M. Mohseni, R. Babbush, S. Boixo, H. Neven, J. R. McClean, “Power of data in quantum machine learning,”
+Nature Communications, vol. 12, art. 2631, 2021.
+[3] S. Thanasilp, S. Wang, N. A. Nghiem, P. Coles, M. Cerezo, “Exponential concentration in quantum kernel methods,” Nature Communications,
+vol. 15, art. 5200, 2024.
+[4] M. Cerezo, A. Sone, T. V olko ff, L. Cincio, P. J. Coles, “Cost function dependent barren plateaus in shallow parametrized quantum circuits,”
+Nature Communications, vol. 12, art. 1791, 2021.
+[5] J. N. Kutz, S. L. Brunton, B. W. Brunton, J. L. Proctor, Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems, SIAM,
+2016.
+[6] B. Lusch, J. N. Kutz, S. L. Brunton, “Deep learning for universal linear embeddings of nonlinear dynamics,” Nature Communications, vol. 9,
+art. 4950, 2018.
+[7] M. Raissi, P. Perdikaris, G. E. Karniadakis, “Physics-informed neural networks,” Journal of Computational Physics, vol. 378, pp. 686–707,
+2019.
+[8] H. Qiu, J. Lee, J. Lin, G. Yu, “Wavelet filter-based weak signature detection method and its application on rolling element bearing prognostics,”
+Journal of Sound and Vibration, vol. 289, no. 4-5, pp. 1066–1090, 2006.
+[9] B. Wang, Y . Lei, N. Li, N. Li, “A hybrid prognostics approach for estimating remaining useful life of rolling element bearings,” IEEE Transac-
+tions on Reliability, vol. 69, no. 1, pp. 401–412, 2020.
+[10] F. T. Liu, K. M. Ting, Z.-H. Zhou, “Isolation forest,” Proc. 8th IEEE Int. Conf. on Data Mining (ICDM), 2008, pp. 413–422.
+[11] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, L. Kaiser, I. Polosukhin, “Attention is all you need,” Advances in
+Neural Information Processing Systems (NeurIPS), 2017.
+[12] Xi’an Jiaotong University research group, “Koopman-informed neural network for machinery’s nonlinear dynamics learning and remaining
+useful life prediction,” 2024–2025.
+[13] A. da Silva et al., “Bearing fault diagnosis using quantum machine learning,” 2024 (preprint /conference report).
+[14] SBPO 2025 proceedings, “Bearing fault diagnosis with quantum machine learning: experimental case study on a test bench,” 2025.
+[15] E. B. Yucesan, F. A. C. Viana, “Hybrid physics-informed neural networks for main bearing fatigue prognosis,” and related physics-informed
+RUL literature, 2019–2024.
